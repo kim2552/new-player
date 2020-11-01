@@ -1,0 +1,5 @@
+NewPlayer.sln
+*x64/
+*Debug/
+*.vcxproj
+.vs/
