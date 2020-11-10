@@ -1,5 +1,6 @@
 NewPlayer.sln
 *x64/
 *Debug/
-*.vcxproj
+*.vcxproj*
 .vs/
+*.mp4

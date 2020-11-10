@@ -11,6 +11,7 @@
 
 #include "globals.h"
 #include "cPanel.h"
+#include "cVideoProccess.h"
 
 #include "wx/wx.h"
 

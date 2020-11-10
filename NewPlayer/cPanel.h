@@ -15,11 +15,6 @@
 #include "wx/wx.h"
 #include "wx/mediactrl.h"
 
-// OpenCV libraries
-#include "opencv2/core/core.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc.hpp"
-
 class cPanel : public wxPanel
 {
 public:
