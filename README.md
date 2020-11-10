@@ -1,6 +1,6 @@
 ## NewPlayer
 
-** Currently in development.**
+**Currently in development**
 
 ## About The Project
 NewPlayer is a video manipulation project that can swap the face of a character in a video with a different face selected by the user.
