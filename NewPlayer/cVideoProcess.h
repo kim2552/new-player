@@ -1,5 +1,7 @@
 #pragma once
 
+#include "globals.h"
+
 #include "wx/wx.h"
 
 // OpenCV libraries
@@ -7,13 +9,14 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc.hpp"
 
-class cVideoProccess
+class cVideoProcess
 {
 public:
-	cVideoProccess();
-	~cVideoProccess();
+	cVideoProcess();
+	~cVideoProcess();
 
 public:
+	void ProcessFrame(cv::Mat& frame);
 	void ProcessVideo();
 };
 

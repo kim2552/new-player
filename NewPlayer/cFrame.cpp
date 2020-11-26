@@ -28,10 +28,10 @@ cFrame::~cFrame()
 
 void cFrame::NewVideoCallback(wxCommandEvent& event)
 {
-	const wxString& VIDEO_PATH = "C:/Users/jooho/Downloads/test_video_new.mp4";
+	const wxString& VIDEO_PATH = NEW_VIDEO_PATH;
 
 	//TODO:: load video file here.
-	cVideoProccess* vidproc = new cVideoProccess();
+	cVideoProcess* vidproc = new cVideoProcess();
 	vidproc->ProcessVideo();
 
 	bool bOK = m_panel->m_mediactrl->Load(VIDEO_PATH);
