@@ -2,7 +2,8 @@
 
 cVideoProcess::cVideoProcess()
 {
-
+	ff_detector = dlib::get_frontal_face_detector();
+	dlib::deserialize(SHAPE_PREDICTOR) >> shape_pred;
 }
 
 cVideoProcess::~cVideoProcess()
@@ -10,22 +11,55 @@ cVideoProcess::~cVideoProcess()
 
 }
 
-void cVideoProcess::ProcessFrame(cv::Mat& frame)
+/** This function converts dlib::point to cv::Point and stores in a vector of landmarks
+	This function is needed because in this implementation I have used opencv and dlib bothand they
+	both have their own image processing library so when using a dlib method, its arguments should be
+	as expected */
+void dlib_point2cv_Point(dlib::full_object_detection& S, std::vector<cv::Point>& L, double& scale)
 {
-	cv::Mat grad_x, grad_y;
-	cv::Mat abs_grad_x, abs_grad_y;
+	for (unsigned int i = 0; i < S.num_parts(); ++i)
+	{
+		L.push_back(cv::Point(S.part(i).x() * (1 / scale), S.part(i).y() * (1 / scale)));
+	}
+}
 
-	// Convert frame to grayscale
-	cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
+void cVideoProcess::ProcessFrame(cv::Mat& src_frame, cv::Mat& dst_frame)
+{
+	// Frontal face detector
+	dlib::array2d<dlib::rgb_pixel> dlib_frame;
+	dlib::assign_image(dlib_frame, dlib::cv_image<dlib::rgb_pixel>(src_frame));
+	std::vector<dlib::rectangle> dets = ff_detector(dlib_frame);
+	
+	std::vector<dlib::full_object_detection> shapes;
+	double scale = 1;
 
-	// Apply Sobel filter
-	cv::Sobel(frame, grad_x, 3, 1, 0);
-	cv::Sobel(frame, grad_y, 3, 0, 1);
+	std::vector<std::vector<cv::Point>> contours;
+	for (unsigned long j = 0; j < dets.size(); ++j) {
+		std::vector<cv::Point> contour;
 
-	cv::convertScaleAbs(grad_x, abs_grad_x);
-	cv::convertScaleAbs(grad_y, abs_grad_y);
+		dlib::full_object_detection shape = this->shape_pred(dlib_frame, dets[j]);
+		shapes.push_back(shape);
 
-	cv::addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0, frame);
+		dlib_point2cv_Point(shape, contour, scale);
+		contours.push_back(contour);
+	}
+	dst_frame = dlib::toMat(dlib_frame);
+
+#if DEVELOP_MODE
+	this->win.clear_overlay();
+	this->win.set_image(dlib_frame);
+	this->win.add_overlay(dlib::render_face_detections(shapes));
+#endif
+
+	// convex Hull
+	std::vector<std::vector<cv::Point>> hullIndices(contours.size());
+	for (unsigned long j = 0; j < contours.size(); ++j) {
+		cv::convexHull(contours[j], hullIndices[j], false, false);
+	}
+
+	for (unsigned long j = 0; j < contours.size(); ++j) {
+		cv::drawContours(dst_frame, hullIndices, (int)j, (0, 255, 0), 2);
+	}
 }
 
 void cVideoProcess::ProcessVideo()
@@ -34,7 +68,8 @@ void cVideoProcess::ProcessVideo()
 	std::string file_path_new = NEW_VIDEO_PATH;
 
 	cv::VideoCapture cap;
-	cv::Mat frame;
+	cv::Mat src_frame;
+	cv::Mat dst_frame;
 
 	// Open the video file
 	cap.open(file_path);
@@ -43,24 +78,24 @@ void cVideoProcess::ProcessVideo()
 	}
 
 	// Need first frame to get frame size
-	cap >> frame;
+	cap >> src_frame;
 
-	float fps = cap.get(cv::CAP_PROP_FPS);														// Get FPS for new video
-	int fourcc = cv::VideoWriter::fourcc('M', 'P', '4', 'V');									// Codec for mp4
-	cv::VideoWriter new_video(file_path_new, fourcc, fps, cv::Size(frame.cols, frame.rows), 0);	// Video writer
+	float fps = cap.get(cv::CAP_PROP_FPS);																// Get FPS for new video
+	int fourcc = cv::VideoWriter::fourcc('M', 'P', '4', 'V');											// Codec for mp4
+	cv::VideoWriter new_video(file_path_new, fourcc, fps, cv::Size(src_frame.cols, src_frame.rows), 1);	// Video writer
 
 	// Loop through the rest of the frames
 	while(1){
-		if (frame.empty()) {
+		if (src_frame.empty()) {
 			break;
 		} else {
 
-			ProcessFrame(frame);
+			ProcessFrame(src_frame, dst_frame);
 
-			new_video.write(frame);
+			new_video.write(dst_frame);
 		}
 
-		cap >> frame;
+		cap >> src_frame;
 	}
 
 	// Release video capture and writer
