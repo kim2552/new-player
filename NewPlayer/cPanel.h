@@ -14,6 +14,7 @@
 // wxWidget libraries
 #include "wx/wx.h"
 #include "wx/mediactrl.h"
+#include "wx/notebook.h"
 
 class cPanel : public wxPanel
 {
@@ -22,11 +23,17 @@ public:
 	~cPanel();
 
 public:
-	wxMediaCtrl* m_mediactrl;
+	wxMediaCtrl* new_video_mediactrl;
+	wxMediaCtrl* landmark_video_mediactrl;
+	wxMediaCtrl* convex_video_mediactrl;
+	wxMediaCtrl* delaunay_video_mediactrl;
+
 	wxButton* m_playbutton;
+	wxNotebook* m_notebook;
 
 private:
 	void PlayButtonCallback(wxCommandEvent&);
+	wxWindow* CreateVisualPage(wxWindow* parent, wxMediaCtrl* m_mediactrl);
 
 	wxDECLARE_EVENT_TABLE();
 };

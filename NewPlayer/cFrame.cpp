@@ -28,13 +28,26 @@ cFrame::~cFrame()
 
 void cFrame::NewVideoCallback(wxCommandEvent& event)
 {
-	const wxString& VIDEO_PATH = NEW_VIDEO_PATH;
+	const wxString& new_video = NEW_VIDEO_PATH;
+	const wxString& landmark_video = LANDMARK_VIDEO_PATH;
+	const wxString& convex_video = CONVEX_VIDEO_PATH;
+	const wxString& delaunay_video = DELAUNAY_VIDEO_PATH;
 
 	//TODO:: load video file here.
 	cVideoProcess* vidproc = new cVideoProcess();
 	vidproc->ProcessVideo();
 
-	bool bOK = m_panel->m_mediactrl->Load(VIDEO_PATH);
-	wxASSERT_MSG(bOK, "Could not load media file!");
+	bool bOK = m_panel->new_video_mediactrl->Load(new_video);
+	wxASSERT_MSG(bOK, "Could not load NEW_VIDEO_PATH media file!");
+
+	bOK = m_panel->landmark_video_mediactrl->Load(landmark_video);
+	wxASSERT_MSG(bOK, "Could not load LANDMARK_VIDEO_PATH media file!");
+
+	bOK = m_panel->convex_video_mediactrl->Load(convex_video);
+	wxASSERT_MSG(bOK, "Could not load CONVEX_VIDEO_PATH media file!");
+
+	bOK = m_panel->delaunay_video_mediactrl->Load(delaunay_video);
+	wxASSERT_MSG(bOK, "Could not load DELAUNAY_VIDEO_PATH media file!");
+
 	wxUnusedVar(bOK);
 }

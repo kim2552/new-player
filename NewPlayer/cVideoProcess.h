@@ -24,16 +24,11 @@ public:
 	~cVideoProcess();
 
 public:
-	void ProcessFrame(cv::Mat& src_frame, cv::Mat& dst_frame);
+	void ProcessFrame(cv::Mat& src_frame, cv::Mat& dst_frame,std::vector<cv::VideoWriter> videos);
 	void ProcessVideo();
 
 private:
 	dlib::frontal_face_detector ff_detector;	// To get bounding boxes for each face
 	dlib::shape_predictor shape_pred;			// Predict face landmark predictions given image & face bounding box
-
-#if DEVELOP_MODE
-	dlib::image_window win;
-#endif
-
 };
 
