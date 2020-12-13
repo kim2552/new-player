@@ -24,12 +24,16 @@ public:
 
 private:
 	wxMenuBar* m_menubar;
+	wxMenu* m_menuoptions;
 	wxMenu* m_menufile;
 	cPanel* m_panel;
 
 // wx events and callbacks
 private:
-	void NewVideoCallback(wxCommandEvent&);
+	cVideoProcess* vidproc;
+
+	void LoadVideoCallback(wxCommandEvent&);
+	void ToggleStepsCallback(wxCommandEvent&);
 
 	// Required for mapping events to callbacks
 	wxDECLARE_EVENT_TABLE();

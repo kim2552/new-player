@@ -2,23 +2,31 @@
 
 // Bind controls to callback functions
 wxBEGIN_EVENT_TABLE(cFrame, wxFrame)
-	EVT_MENU(ID_FILE, cFrame::NewVideoCallback)
+	EVT_MENU(ID_FILE, cFrame::LoadVideoCallback)
+	EVT_MENU(ID_STEPS, cFrame::ToggleStepsCallback)
 wxEND_EVENT_TABLE()
 
 cFrame::cFrame(wxString title, wxPoint point, wxSize size) : 
 	wxFrame(nullptr, wxID_ANY, title, point, size)
 {
-	// New file menu
+	// File menu
 	m_menufile = new wxMenu;
-	m_menufile->Append(ID_FILE, "New Video");
+	m_menufile->Append(ID_FILE, "Load Video");
+
+	// Options menu
+	m_menuoptions = new wxMenu;
+	m_menuoptions->Append(ID_STEPS, "Toggle Steps");
 
 	// Menu bar
 	m_menubar = new wxMenuBar;
 	m_menubar->Append(m_menufile, "File");
+	m_menubar->Append(m_menuoptions, "Options");
 	SetMenuBar(m_menubar);
 	
 	//Load media into controller
 	m_panel = new cPanel(this);
+
+	vidproc = new cVideoProcess();
 }
 
 cFrame::~cFrame()
@@ -26,7 +34,7 @@ cFrame::~cFrame()
 
 }
 
-void cFrame::NewVideoCallback(wxCommandEvent& event)
+void cFrame::LoadVideoCallback(wxCommandEvent& event)
 {
 	const wxString& new_video = NEW_VIDEO_PATH;
 	const wxString& landmark_video = LANDMARK_VIDEO_PATH;
@@ -34,7 +42,6 @@ void cFrame::NewVideoCallback(wxCommandEvent& event)
 	const wxString& delaunay_video = DELAUNAY_VIDEO_PATH;
 
 	//TODO:: load video file here.
-	cVideoProcess* vidproc = new cVideoProcess();
 	vidproc->ProcessVideo();
 
 	bool bOK = m_panel->new_video_mediactrl->Load(new_video);
@@ -50,4 +57,9 @@ void cFrame::NewVideoCallback(wxCommandEvent& event)
 	wxASSERT_MSG(bOK, "Could not load DELAUNAY_VIDEO_PATH media file!");
 
 	wxUnusedVar(bOK);
+}
+
+void cFrame::ToggleStepsCallback(wxCommandEvent& event)
+{
+	vidproc->ToggleIntermediateSteps();
 }
