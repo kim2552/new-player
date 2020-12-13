@@ -32,11 +32,13 @@ public:
 	cv::Mat WarpTriangle(cv::Mat img_triangle, std::vector<cv::Point> src_triangle, std::vector<cv::Point> dst_triangle, cv::Rect src_rect, cv::Rect dst_rect, cv::Mat mask);
 	void ReconstructFace(cv::Mat& img, cv::Rect boundingRect, cv::Mat warped_triangle);
 
-	void DelaunayTriangulation(cv::Mat& img, cv::Subdiv2D& subdiv, std::vector<cv::Point> points, cv::Scalar delaunay_color);
+	void DelaunayTriangulation(cv::Mat& img, cv::Subdiv2D& subdiv, std::vector<cv::Point> points, cv::Scalar delaunay_color, bool update_tri_indices);
 	void ProcessSourceFrame(cv::Mat& src_frame, cv::Mat& dst_frame, cv::Subdiv2D& subdiv, std::vector<cv::VideoWriter> videos);
 	void ProcessDestinationFrame(cv::Mat& src_frame, cv::Mat& dst_frame, cv::Subdiv2D& subdiv, std::vector<cv::VideoWriter> videos);
 	void ProcessTriangulation(cv::Mat& img, cv::Mat& frame, std::vector<std::vector<cv::Point>>& hullIndices);
 	void ProcessVideo();
+
+	void ToggleIntermediateSteps();
 
 private:
 	dlib::frontal_face_detector ff_detector;	// To get bounding boxes for each face
@@ -53,5 +55,6 @@ private:
 
 	std::vector<std::vector<int>> indices_triangles;
 
+	bool show_intermediate_steps;
 };
 
