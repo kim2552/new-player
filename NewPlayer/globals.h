@@ -9,8 +9,8 @@
 * E-mail: joohoon.kim@outlook.com
 */
 
-#define SWAP_FILE_PATH		"C:\\Users\\jooho\\Desktop\\Sandbox\\NewPlayer\\assets\\obama.jpg"
-#define NEW_SWAP_FILE_PATH	"C:\\Users\\jooho\\Desktop\\Sandbox\\NewPlayer\\assets\\obama_new.jpg"
+#define SWAP_FILE_PATH		"C:\\Users\\jooho\\Desktop\\Sandbox\\NewPlayer\\assets\\jennifer.jpg"
+#define NEW_SWAP_FILE_PATH	"C:\\Users\\jooho\\Desktop\\Sandbox\\NewPlayer\\assets\\image_new.jpg"
 
 #define ORIG_VIDEO_PATH "C:\\Users\\jooho\\Desktop\\Sandbox\\NewPlayer\\assets\\joe.mp4"
 #define NEW_VIDEO_PATH	"C:\\Users\\jooho\\Desktop\\Sandbox\\NewPlayer\\assets\\joe_new.mp4"

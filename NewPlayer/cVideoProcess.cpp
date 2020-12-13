@@ -23,7 +23,7 @@ static void dlib_point2cv_Point(dlib::full_object_detection& dlib_points, std::v
 	}
 }
 
-void cVideoProcess::DelaunayTriangulation(cv::Mat& img, cv::Subdiv2D& subdiv, std::vector<cv::Point2f> points, cv::Scalar delaunay_color)
+void cVideoProcess::DelaunayTriangulation(cv::Mat& img, cv::Subdiv2D& subdiv, std::vector<cv::Point> points, cv::Scalar delaunay_color)
 {
 	cv::Rect rect(0, 0, img.cols, img.rows);
 	subdiv.initDelaunay(rect);
@@ -41,6 +41,23 @@ void cVideoProcess::DelaunayTriangulation(cv::Mat& img, cv::Subdiv2D& subdiv, st
 		pt[0] = cv::Point(std::round(t[0]), std::round(t[1]));
 		pt[1] = cv::Point(std::round(t[2]), std::round(t[3]));
 		pt[2] = cv::Point(std::round(t[4]), std::round(t[5]));
+
+		std::vector<int> triangle;
+		int index_pt1, index_pt2, index_pt3;
+
+		for (unsigned int j = 0; j < points.size(); j++) {
+			if (points[j] == pt[0])
+				index_pt1 = j;
+			if (points[j] == pt[1])
+				index_pt2 = j;
+			if (points[j] == pt[2])
+				index_pt3 = j;
+		}
+
+		if (index_pt1 != NULL && index_pt2 != NULL && index_pt3 != NULL) {
+			triangle = { index_pt1, index_pt2, index_pt3 };
+			indices_triangles.push_back(triangle);
+		}
 
 		// Draw rectangles completely inside the image
 		if (rect.contains(pt[0]) && rect.contains(pt[1]) && rect.contains(pt[2])) {
@@ -82,9 +99,9 @@ std::vector<std::vector<cv::Point>> cVideoProcess::HullIndicies(std::vector<std:
 	return hull_indicies;
 }
 
-void cVideoProcess::ProcessFrame(cv::Mat& src_frame, cv::Mat& dst_frame,  cv::Subdiv2D& subdiv, std::vector<cv::VideoWriter> videos)
+void cVideoProcess::ProcessSourceFrame(cv::Mat& src_frame, cv::Mat& dst_frame, cv::Subdiv2D& subdiv, std::vector<cv::VideoWriter> videos)
 {
-	std::vector<cv::Point2f> points;
+	std::vector<cv::Point> points;
 
 	std::vector<std::vector<cv::Point>> contours;
 	contours = FrontalFaceLandmarks(src_frame);
@@ -122,9 +139,11 @@ void cVideoProcess::ProcessFrame(cv::Mat& src_frame, cv::Mat& dst_frame,  cv::Su
 	dst_frame = dmat.clone();
 	dmat.release();
 	/*****************************************/
+
+	image_landmark_points = points;
 }
 
-cv::Mat cVideoProcess::TriangleMask(cv::Rect rectangle, std::vector<cv::Point2f> triangle)
+cv::Mat cVideoProcess::TriangleMask(cv::Rect rectangle, std::vector<cv::Point> triangle)
 {
 	cv::Mat triangle_cropped_mask = cv::Mat::zeros(cv::Size(rectangle.width, rectangle.height), CV_8U);
 	std::vector<cv::Point> points;
@@ -135,7 +154,7 @@ cv::Mat cVideoProcess::TriangleMask(cv::Rect rectangle, std::vector<cv::Point2f>
 	return triangle_cropped_mask;
 }
 
-cv::Mat cVideoProcess::WarpTriangle(cv::Mat img_triangle, std::vector<cv::Point2f> src_triangle, std::vector<cv::Point2f> dst_triangle, cv::Rect src_rectangle, cv::Rect dst_rectangle, cv::Mat mask)
+cv::Mat cVideoProcess::WarpTriangle(cv::Mat img_triangle, std::vector<cv::Point> src_triangle, std::vector<cv::Point> dst_triangle, cv::Rect src_rectangle, cv::Rect dst_rectangle, cv::Mat mask)
 {
 	cv::Mat warp_mat;
 	cv::Mat img_warped_triangle;
@@ -172,31 +191,21 @@ void cVideoProcess::ReconstructFace(cv::Mat& img, cv::Rect boundingRect, cv::Mat
 	frame_new_face_rect_area_with_triangle.copyTo(img(boundingRect));
 }
 
-void cVideoProcess::ProcessTriangulation(cv::Mat& img, cv::Mat& frame, cv::Subdiv2D img_subdiv, cv::Subdiv2D frame_subdiv, std::vector<std::vector<cv::Point>>& hullIndices)
+void cVideoProcess::ProcessTriangulation(cv::Mat& img, cv::Mat& frame, std::vector<std::vector<cv::Point>>& hullIndices)
 {
 	cv::Mat frame_new_face = cv::Mat::zeros(cv::Size(frame.cols, frame.rows), frame.type());
 
 	cv::Rect img_rect, frame_rect;
-	std::vector<cv::Point2f> img_tri, frame_tri;
+	std::vector<cv::Point> img_tri, frame_tri;
 
-	std::vector<cv::Vec6f> img_triangleList;
-	img_subdiv.getTriangleList(img_triangleList);
+	for (unsigned int i = 0; i < indices_triangles.size(); i++) {
+		img_tri.push_back(image_landmark_points[indices_triangles[i][0]]);
+		img_tri.push_back(image_landmark_points[indices_triangles[i][1]]);
+		img_tri.push_back(image_landmark_points[indices_triangles[i][2]]);
 
-	std::vector<cv::Vec6f> frame_triangleList;
-	frame_subdiv.getTriangleList(frame_triangleList);
-
-	int index_count = img_triangleList.size() < frame_triangleList.size() ? img_triangleList.size() : frame_triangleList.size();
-
-	cv::Mat warp_dst = frame.clone();
-
-	for (unsigned int i = 0; i < index_count; i++) {
-		img_tri.push_back(cv::Point2f(img_triangleList[i][0], img_triangleList[i][1]));
-		img_tri.push_back(cv::Point2f(img_triangleList[i][2], img_triangleList[i][3]));
-		img_tri.push_back(cv::Point2f(img_triangleList[i][4], img_triangleList[i][5]));
-
-		frame_tri.push_back(cv::Point2f(frame_triangleList[i][0], frame_triangleList[i][1]));
-		frame_tri.push_back(cv::Point2f(frame_triangleList[i][2], frame_triangleList[i][3]));
-		frame_tri.push_back(cv::Point2f(frame_triangleList[i][4], frame_triangleList[i][5]));
+		frame_tri.push_back(frame_landmark_points[indices_triangles[i][0]]);
+		frame_tri.push_back(frame_landmark_points[indices_triangles[i][1]]);
+		frame_tri.push_back(frame_landmark_points[indices_triangles[i][2]]);
 
 		img_rect = cv::boundingRect(img_tri);
 		frame_rect = cv::boundingRect(frame_tri);
@@ -240,6 +249,41 @@ void cVideoProcess::ProcessTriangulation(cv::Mat& img, cv::Mat& frame, cv::Subdi
 	//cv::seamlessClone(new_frame_with_seams, frame, frame_head_mask, center_face, frame, cv::NORMAL_CLONE);
 }
 
+void cVideoProcess::ProcessDestinationFrame(cv::Mat& src_frame, cv::Mat& dst_frame, cv::Subdiv2D& subdiv, std::vector<cv::VideoWriter> videos)
+{
+	std::vector<cv::Point> points;
+
+	std::vector<std::vector<cv::Point>> contours;
+	contours = FrontalFaceLandmarks(src_frame);
+
+	/** Display Facial Landmarks **/
+	cv::Mat fmat = src_frame.clone();
+	for (unsigned int j = 0; j < contours.size(); j++) {
+		for (unsigned int i = 0; i < contours[j].size(); i++) {
+			points.push_back(contours[j][i]);						// points saved for delaunay triangulation
+			cv::circle(fmat, contours[j][i], 1, (0, 255, 255), 1);
+		}
+	}
+	if (videos.size() > 0)
+		videos[0].write(fmat);	//Landmark Video Write
+	fmat.release();
+	/*****************************************/
+
+	frame_hullIndices = HullIndicies(contours);
+
+	/** Display Convex Hull **/
+	cv::Mat chmat = src_frame.clone();
+	for (unsigned int j = 0; j < contours.size(); j++) {
+		cv::drawContours(chmat, frame_hullIndices, j, (0, 255, 0), 2);
+	}
+	if (videos.size() > 1)
+		videos[1].write(chmat);	//Convex Hull Video Write
+	chmat.release();
+	/*****************************************/
+
+	frame_landmark_points = points;
+}
+
 void cVideoProcess::ProcessVideo()
 {
 	std::string file_path = ORIG_VIDEO_PATH;
@@ -262,7 +306,7 @@ void cVideoProcess::ProcessVideo()
 
 	std::vector<cv::VideoWriter> videos;
 
-	ProcessFrame(src_swap_img, dst_swap_img, image_subdiv, videos);
+	ProcessSourceFrame(src_swap_img, dst_swap_img, image_subdiv, videos);
 	cv::imwrite(swap_file_path_new, dst_swap_img);
 
 	// Open the video file
@@ -290,9 +334,9 @@ void cVideoProcess::ProcessVideo()
 			break;
 		} else {
 
-			ProcessFrame(src_frame, dst_frame, frame_subdiv, videos);
+			ProcessDestinationFrame(src_frame, dst_frame, frame_subdiv, videos);
 
-			ProcessTriangulation(src_swap_img, src_frame, image_subdiv, frame_subdiv, frame_hullIndices);
+			ProcessTriangulation(src_swap_img, src_frame, frame_hullIndices);
 
 			new_video.write(src_frame);
 		}
