@@ -62,6 +62,8 @@ wxWindow* cPanel::CreateVisualPage(wxWindow* parent, wxMediaCtrl* m_mediactrl)
 	wxASSERT_MSG(bOK, "Could not create media control!");
 	wxUnusedVar(bOK);
 
+	//TODO::Display Image to swap with
+
 	//Play button
 	m_playbutton = new wxButton();
 	m_playbutton->Create(page, ID_BUTTONPLAY, "Play");
