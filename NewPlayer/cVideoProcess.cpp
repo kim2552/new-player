@@ -124,6 +124,54 @@ void cVideoProcess::ProcessFrame(cv::Mat& src_frame, cv::Mat& dst_frame,  cv::Su
 	/*****************************************/
 }
 
+cv::Mat cVideoProcess::TriangleMask(cv::Rect rectangle, std::vector<cv::Point2f> triangle)
+{
+	cv::Mat triangle_cropped_mask = cv::Mat::zeros(cv::Size(rectangle.width, rectangle.height), CV_8U);
+	std::vector<cv::Point> points;
+	for (unsigned int j = 0; j < 3; j++) {
+		points.push_back(cv::Point((int)(triangle[j].x - rectangle.x), (int)(triangle[j].y - rectangle.y)));
+	}
+	cv::fillConvexPoly(triangle_cropped_mask, points, cv::Scalar(255, 255, 255));
+	return triangle_cropped_mask;
+}
+
+cv::Mat cVideoProcess::WarpTriangle(cv::Mat img_triangle, std::vector<cv::Point2f> src_triangle, std::vector<cv::Point2f> dst_triangle, cv::Rect src_rectangle, cv::Rect dst_rectangle, cv::Mat mask)
+{
+	cv::Mat warp_mat;
+	cv::Mat img_warped_triangle;
+	cv::Mat img_warped_triangle_cropped;
+	std::vector<cv::Point2f> img_points2f, frame_points2f;
+	for (unsigned int j = 0; j < 3; j++) {
+		img_points2f.push_back(cv::Point2f((src_triangle[j].x - src_rectangle.x), (src_triangle[j].y - src_rectangle.y)));
+		frame_points2f.push_back(cv::Point2f((dst_triangle[j].x - dst_rectangle.x), (dst_triangle[j].y - dst_rectangle.y)));
+	}
+	warp_mat = cv::getAffineTransform(img_points2f, frame_points2f);
+	cv::warpAffine(img_triangle, img_warped_triangle, warp_mat, cv::Size(dst_rectangle.width, dst_rectangle.height));
+	cv::bitwise_and(img_warped_triangle, img_warped_triangle, img_warped_triangle_cropped, mask);
+
+	return img_warped_triangle_cropped;
+}
+
+void cVideoProcess::ReconstructFace(cv::Mat& img, cv::Rect boundingRect, cv::Mat warped_triangle)
+{
+	cv::Mat frame_new_face_rect_area, frame_new_face_rect_area_grey;
+
+	img(boundingRect).copyTo(frame_new_face_rect_area);
+
+	cv::cvtColor(frame_new_face_rect_area, frame_new_face_rect_area_grey, cv::COLOR_BGR2GRAY);
+
+	cv::Mat triangles_designed_mask;
+	cv::threshold(frame_new_face_rect_area_grey, triangles_designed_mask, 1, 255, cv::THRESH_BINARY_INV);
+
+	cv::Mat frame_warped_triangle_cropped;
+	cv::bitwise_and(warped_triangle, warped_triangle, frame_warped_triangle_cropped, triangles_designed_mask);
+
+	cv::Mat frame_new_face_rect_area_with_triangle;
+	cv::add(frame_new_face_rect_area, frame_warped_triangle_cropped, frame_new_face_rect_area_with_triangle);
+
+	frame_new_face_rect_area_with_triangle.copyTo(img(boundingRect));
+}
+
 void cVideoProcess::ProcessTriangulation(cv::Mat& img, cv::Mat& frame, cv::Subdiv2D img_subdiv, cv::Subdiv2D frame_subdiv, std::vector<std::vector<cv::Point>>& hullIndices)
 {
 	cv::Mat frame_new_face = cv::Mat::zeros(cv::Size(frame.cols, frame.rows), frame.type());
@@ -157,51 +205,16 @@ void cVideoProcess::ProcessTriangulation(cv::Mat& img, cv::Mat& frame, cv::Subdi
 		img(img_rect).copyTo(img_cropped_triangle);
 
 		// Create triangle mask for image
-		cv::Mat img_triangle_cropped_mask = cv::Mat::zeros(cv::Size(img_rect.width, img_rect.height), CV_8U);
-		std::vector<cv::Point> img_points;
-		for (unsigned int j = 0; j < 3; j++) {
-			img_points.push_back(cv::Point((int)(img_tri[j].x - img_rect.x), (int)(img_tri[j].y - img_rect.y)));
-		}
-		cv::fillConvexPoly(img_triangle_cropped_mask, img_points, cv::Scalar(255, 255, 255));
+		cv::Mat img_triangle_cropped_mask = TriangleMask(img_rect, img_tri);
 
 		// Create triangle mask for frame
-		cv::Mat frame_triangle_cropped_mask = cv::Mat::zeros(cv::Size(frame_rect.width, frame_rect.height), CV_8U);
-		std::vector<cv::Point> frame_points;
-		for (unsigned int j = 0; j < 3; j++) {
-			frame_points.push_back(cv::Point((int)(frame_tri[j].x - frame_rect.x), (int)(frame_tri[j].y - frame_rect.y)));
-		}
-		cv::fillConvexPoly(frame_triangle_cropped_mask, frame_points, cv::Scalar(255, 255, 255));
+		cv::Mat frame_triangle_cropped_mask = TriangleMask(frame_rect, frame_tri);
 
 		// Warp the triangles
-		cv::Mat warp_mat;
-		cv::Mat img_warped_triangle;
-		cv::Mat img_warped_triangle_cropped;
-		std::vector<cv::Point2f> img_points2f, frame_points2f;
-		for (unsigned int j = 0; j < 3; j++) {
-			img_points2f.push_back(cv::Point2f((img_tri[j].x - img_rect.x), (img_tri[j].y - img_rect.y)));
-			frame_points2f.push_back(cv::Point2f((frame_tri[j].x - frame_rect.x), (frame_tri[j].y - frame_rect.y)));
-		}
-		warp_mat = cv::getAffineTransform(img_points2f, frame_points2f);
-		cv::warpAffine(img_cropped_triangle, img_warped_triangle, warp_mat, cv::Size(frame_rect.width,frame_rect.height));
-		cv::bitwise_and(img_warped_triangle, img_warped_triangle, img_warped_triangle_cropped, frame_triangle_cropped_mask);
+		cv::Mat img_warped_triangle_cropped = WarpTriangle(img_cropped_triangle, img_tri, frame_tri, img_rect, frame_rect, frame_triangle_cropped_mask);
 
 		// Reconstruct the frame face
-		cv::Mat frame_new_face_rect_area, frame_new_face_rect_area_grey;
-
-		frame_new_face(frame_rect).copyTo(frame_new_face_rect_area);
-
-		cv::cvtColor(frame_new_face_rect_area, frame_new_face_rect_area_grey, cv::COLOR_BGR2GRAY);
-
-		cv::Mat triangles_designed_mask;
-		cv::threshold(frame_new_face_rect_area_grey, triangles_designed_mask, 1, 255, cv::THRESH_BINARY_INV);
-
-		cv::Mat frame_warped_triangle_cropped;
-		cv::bitwise_and(img_warped_triangle_cropped, img_warped_triangle_cropped, frame_warped_triangle_cropped, triangles_designed_mask);
-
-		cv::Mat frame_new_face_rect_area_with_triangle;
-		cv::add(frame_new_face_rect_area, frame_warped_triangle_cropped, frame_new_face_rect_area_with_triangle);
-
-		frame_new_face_rect_area_with_triangle.copyTo(frame_new_face(frame_rect));
+		ReconstructFace(frame_new_face, frame_rect, img_warped_triangle_cropped);
 
 		img_tri.clear();
 		frame_tri.clear();

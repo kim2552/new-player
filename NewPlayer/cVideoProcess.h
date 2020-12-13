@@ -27,6 +27,11 @@ public:
 public:
 	std::vector<std::vector<cv::Point>> FrontalFaceLandmarks(cv::Mat& src);
 	std::vector<std::vector<cv::Point>> HullIndicies(std::vector<std::vector<cv::Point>> contours);
+
+	cv::Mat TriangleMask(cv::Rect rectangle, std::vector<cv::Point2f> triangle);
+	cv::Mat WarpTriangle(cv::Mat img_triangle, std::vector<cv::Point2f> src_triangle, std::vector<cv::Point2f> dst_triangle, cv::Rect src_rect, cv::Rect dst_rect, cv::Mat mask);
+	void ReconstructFace(cv::Mat& img, cv::Rect boundingRect, cv::Mat warped_triangle);
+
 	void DelaunayTriangulation(cv::Mat& img, cv::Subdiv2D& subdiv, std::vector<cv::Point2f> points, cv::Scalar delaunay_color);
 	void ProcessFrame(cv::Mat& src_frame, cv::Mat& dst_frame, cv::Subdiv2D& subdiv, std::vector<cv::VideoWriter> videos);
 	void ProcessTriangulation(cv::Mat& img, cv::Mat& frame, cv::Subdiv2D img_subdiv, cv::Subdiv2D frame_subdiv, std::vector<std::vector<cv::Point>>& hullIndices);
