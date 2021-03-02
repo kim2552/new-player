@@ -4,4 +4,6 @@ NewPlayer.sln
 *.vcxproj*
 .vs/
 *.mp4
-assets/
+*.bz2
+*.dat
+image_new.jpg
