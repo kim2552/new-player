@@ -36,7 +36,7 @@ public:
 	void ProcessSourceFrame(cv::Mat& src_frame, cv::Mat& dst_frame, cv::Subdiv2D& subdiv, std::vector<cv::VideoWriter> videos);
 	void ProcessDestinationFrame(cv::Mat& src_frame, cv::Mat& dst_frame, cv::Subdiv2D& subdiv, std::vector<cv::VideoWriter> videos);
 	void ProcessTriangulation(cv::Mat& img, cv::Mat& frame, std::vector<std::vector<cv::Point>>& hullIndices);
-	void ProcessVideo();
+	void ProcessVideo(std::string original_video_file_path, std::string image_file_path);
 
 	void ToggleIntermediateSteps();
 

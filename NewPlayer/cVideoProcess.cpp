@@ -86,6 +86,7 @@ void cVideoProcess::DelaunayTriangulation(cv::Mat& img, cv::Subdiv2D& subdiv, st
 	}
 }
 
+//TODO::Optimize algorithm to reduce time
 std::vector<std::vector<cv::Point>> cVideoProcess::FrontalFaceLandmarks(cv::Mat& src)
 {
 	dlib::array2d<dlib::rgb_pixel> dlib_frame;
@@ -301,12 +302,12 @@ void cVideoProcess::ProcessDestinationFrame(cv::Mat& src_frame, cv::Mat& dst_fra
 	frame_landmark_points = points;
 }
 
-void cVideoProcess::ProcessVideo()
+void cVideoProcess::ProcessVideo(std::string original_video_file_path, std::string image_file_path)
 {
-	std::string file_path = ORIG_VIDEO_PATH;
+	std::string file_path = original_video_file_path;
 	std::string file_path_new = NEW_VIDEO_PATH;
 
-	std::string swap_file_path = SWAP_FILE_PATH;
+	std::string swap_file_path = image_file_path;
 	std::string swap_file_path_new = NEW_SWAP_FILE_PATH;
 
 	std::string landmark_path = LANDMARK_VIDEO_PATH;
