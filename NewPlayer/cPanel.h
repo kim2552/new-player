@@ -27,6 +27,9 @@ public:
 	wxMediaCtrl* landmark_video_mediactrl;
 	wxMediaCtrl* convex_video_mediactrl;
 	wxMediaCtrl* delaunay_video_mediactrl;
+	wxMediaCtrl* original_video_mediactrl;
+
+	wxString image_file_path;
 
 	wxButton* m_playbutton;
 	wxNotebook* m_notebook;

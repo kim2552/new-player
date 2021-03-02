@@ -14,14 +14,15 @@ cPanel::cPanel(wxFrame* parent) : wxPanel(parent, wxID_ANY)
 	landmark_video_mediactrl = new wxMediaCtrl();
 	convex_video_mediactrl = new wxMediaCtrl();
 	delaunay_video_mediactrl = new wxMediaCtrl();
+	original_video_mediactrl = new wxMediaCtrl();
 
 	//Notebook pages
 	m_notebook = new wxNotebook(this, wxID_ANY);
-	m_notebook->AddPage(CreateVisualPage(m_notebook,new_video_mediactrl), "Face Swapped");
-	m_notebook->AddPage(CreateVisualPage(m_notebook, delaunay_video_mediactrl), "Delaunay Triangulation");
-	m_notebook->AddPage(CreateVisualPage(m_notebook, convex_video_mediactrl), "Convex Hull");
+	m_notebook->AddPage(CreateVisualPage(m_notebook, original_video_mediactrl), "Original Video");
 	m_notebook->AddPage(CreateVisualPage(m_notebook,landmark_video_mediactrl), "Facial Landmarks");
-
+	m_notebook->AddPage(CreateVisualPage(m_notebook, convex_video_mediactrl), "Convex Hull");
+	m_notebook->AddPage(CreateVisualPage(m_notebook, delaunay_video_mediactrl), "Delaunay Triangulation");
+	m_notebook->AddPage(CreateVisualPage(m_notebook, new_video_mediactrl), "Face Swapped");
 	sizer->Add(m_notebook, wxSizerFlags(0));
 
 	this->SetSizerAndFit(sizer);
@@ -38,11 +39,13 @@ void cPanel::PlayButtonCallback(wxCommandEvent& event)
 	landmark_video_mediactrl->Stop();
 	convex_video_mediactrl->Stop();
 	delaunay_video_mediactrl->Stop();
+	original_video_mediactrl->Stop();
 
 	new_video_mediactrl->Play();
 	landmark_video_mediactrl->Play();
 	convex_video_mediactrl->Play();
 	delaunay_video_mediactrl->Play();
+	original_video_mediactrl->Play();
 
 	if (new_video_mediactrl->GetState() == wxMEDIASTATE_PLAYING) {
 		wxLogDebug("Media is playing.");
