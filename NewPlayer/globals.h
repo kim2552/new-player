@@ -26,5 +26,6 @@ enum {
 	ID_NOTEBOOK = 2,
 	ID_MEDIACTRL = 3,
 	ID_BUTTONPLAY = 4,
-	ID_STEPS = 5
+	ID_STEPS = 5,
+	ID_IMG = 6
 };
