@@ -33,6 +33,7 @@ private:
 	cVideoProcess* vidproc;
 
 	void LoadVideoCallback(wxCommandEvent&);
+	void LoadImageCallback(wxCommandEvent&);
 	void ToggleStepsCallback(wxCommandEvent&);
 
 	// Required for mapping events to callbacks
